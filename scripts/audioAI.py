@@ -10,8 +10,7 @@ with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
     config = json.load(f)
 
 model_size = config["model_size"]
-parent_folder =config["parent_file_folder"]
-temp_file_folder = os.path.join(parent_folder, config["temp_file_folder"])
+temp_file_folder = config["temp_file_folder"]
 words_per_line = int(config["words_per_line"])
 clip_length_cutoff = int(config["clip_length_cutoff"])
 speed = float(config["speed"])
@@ -72,18 +71,25 @@ def get_mp3_from_text(text: str = '') -> str:
     # get the path to the chunk
     audio_path = f'{temp_file_folder}{name_seed}.mp3'
 
+    print("Generating audio...", temp_file_folder)
+
     # generate the audio for the chunk
     audio = gTTS(text, lang='en', slow=False)
 
     # save the chunk at the tmp path
     audio.save(audio_path)
 
+    print("Audio generated! Speeding up Audio...")
+
     if(speed != 1):
         speed_up_audio(audio_path, audio_path, speed)
+
+    print("Audio sped up!")
 
     return audio_path
 
 def generate_srt_from_mp3(audio_file_path: str = ''):
+    print("Generating srt...")
     segments, info = model.transcribe(audio_file_path, word_timestamps=True)
     segments = list(segments)
     srt = ''
@@ -99,5 +105,7 @@ def generate_srt_from_mp3(audio_file_path: str = ''):
     # save the srt file at the path
     with open(srt_path, "w") as f:
         f.write(srt)
+
+    print("Srt generated!")
 
     return srt_path

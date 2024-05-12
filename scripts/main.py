@@ -7,6 +7,6 @@ text2 = "Have you ever been in a situation so hilariously unexpected that it bec
 #utilities.update_parent_folder_path()
 
 # mp4.generate_video(text2)
-#mp4.generate_AI_powered_video(text2)
+mp4.generate_AI_powered_video(text2)
 
 
