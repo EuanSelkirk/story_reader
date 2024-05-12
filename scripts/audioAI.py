@@ -10,7 +10,8 @@ with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
     config = json.load(f)
 
 model_size = config["model_size"]
-temp_file_folder = config["temp_file_folder"]
+parent_folder =config["parent_file_folder"]
+temp_file_folder = os.path.join(parent_folder, config["temp_file_folder"])
 words_per_line = int(config["words_per_line"])
 clip_length_cutoff = int(config["clip_length_cutoff"])
 speed = float(config["speed"])

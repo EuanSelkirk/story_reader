@@ -11,9 +11,10 @@ from datetime import datetime
 with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
     config = json.load(f)
 
-temp_file_folder = config["temp_file_folder"]
-output_video_folder = config["output_video_folder"]
-stock_video_footage_folder = config["stock_video_footage_folder"]
+parent_folder = config["parent_file_folder"]
+temp_file_folder = os.path.join(parent_folder, config["temp_file_folder"])
+output_video_folder = os.path.join(parent_folder, config["output_video_folder"])
+stock_video_footage_folder = os.path.join(parent_folder, config["stock_video_footage_folder"])
 
 def generate_video(text: str = '') -> bool:
     try:
