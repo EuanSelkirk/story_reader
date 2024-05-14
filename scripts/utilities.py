@@ -5,14 +5,9 @@ from pytube import YouTube
 with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
     config = json.load(f)
 
-stock_video_footage_folder_uncropped = config["stock_video_footage_folder_uncropped"]
+#yt-dlp -f 'bestvideo' -o '/Users/euan/Desktop/story_reader/files/stock_video_footage/%(title)s.%(ext)s' URL 'https://www.youtube.com/watch?v=lekKHbYQGxM'
 
-def downloadVideo(youtube_link, download_path):
-    print("Downloading Video...")
-    video = YouTube(youtube_link)
-    print('Video Downloaded!')
-    print('Saving: ' + video.title)
-    video.streams.filter(res='1080p').first().download()
+
 
 def update_parent_folder_path():
     # Get the current directory of the current Python script
