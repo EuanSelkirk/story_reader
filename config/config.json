@@ -4,6 +4,7 @@
     "stock_video_footage_folder": "/Users/euan/Desktop/story_reader/files/stock_video_916",
     "stock_video_footage_folder_uncropped": "/Users/euan/Desktop/story_reader/files/stock_video_footage",
     "subtitle_font": "/Users/euan/Desktop/story_reader/files/fonts/Montserrat-Bold.ttf",
+    "gpt_model": "gpt-3.5-turbo",
     "y_position_divisor": 6,
     "words_per_line": 5,
     "speed": 1.2,
