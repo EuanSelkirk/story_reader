@@ -95,10 +95,11 @@ def generate_srt_from_mp3(audio_file_path: str = ''):
     srt = ''
 
     for segment in segments:
-        for i, word in enumerate(segment.words):
-            srt += f'{i+1}\n'
-            srt += f'{convert_to_srt_time(word.start)} --> {convert_to_srt_time(word.end)}\n'
-            srt += f'{word.word.strip()}\n\n'
+        if segment.words is not None:  # Check if words attribute is not None
+            for i, word in enumerate(segment.words):
+                srt += f'{i+1}\n'
+                srt += f'{convert_to_srt_time(word.start)} --> {convert_to_srt_time(word.end)}\n'
+                srt += f'{word.word.strip()}\n\n'
 
     srt_path = f'{temp_file_folder}{name_seed}.srt'
 

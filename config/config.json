@@ -3,8 +3,10 @@
     "output_video_folder": "/Users/euan/Desktop/story_reader/files/finished_shorts",
     "stock_video_footage_folder": "/Users/euan/Desktop/story_reader/files/stock_video_916",
     "stock_video_footage_folder_uncropped": "/Users/euan/Desktop/story_reader/files/stock_video_footage",
-    "words_per_line": "5",
-    "speed": "1.2",
+    "subtitle_font": "/Users/euan/Desktop/story_reader/files/fonts/Montserrat-Bold.ttf",
+    "y_position_divisor": 6,
+    "words_per_line": 5,
+    "speed": 1.2,
     "model_size": "medium",
-    "clip_length_cutoff": "400"
+    "clip_length_cutoff": 400
 }

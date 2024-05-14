@@ -14,6 +14,9 @@ with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
 temp_file_folder = config["temp_file_folder"]
 output_video_folder = config["output_video_folder"]
 stock_video_footage_folder = config["stock_video_footage_folder"]
+y_position_divisor = int(config["y_position_divisor"])
+
+font_path = config['subtitle_font']
 
 def generate_video(text: str = '') -> bool:
     try:
@@ -81,7 +84,8 @@ def generate_AI_powered_video(text: str = ''):
 
         short_duration = audio_clip.duration
 
-        videoFootageFiles = os.listdir(stock_video_footage_folder)
+        video_extensions = ['.mp4', '.avi', '.mkv']  # Add more extensions if needed
+        videoFootageFiles = [f for f in os.listdir(stock_video_footage_folder) if os.path.splitext(f)[1] in video_extensions]
 
         if not videoFootageFiles:
             raise ValueError("No video files found in the stock video footage folder.")
@@ -106,9 +110,21 @@ def generate_AI_powered_video(text: str = ''):
 
         subtitle_file_path = audioAI.generate_srt_from_mp3(audio_file_path=audio_file_path)
 
-        generator = lambda txt: TextClip(txt, font="poppins", fontsize=50, color="white", method='caption',stroke_color="black", stroke_width=2, size=segment_clip.size)
+        switch_fontsize = {
+            2160: 125,
+            1440: 100,
+            1080: 75,
+            720: 50
+        }
 
-        subtitle_clip = SubtitlesClip(subtitle_file_path, generator)
+        fontsize = switch_fontsize.get(video_clip.size[1], 720)
+
+        # Calculate Y position between center and bottom
+        custom_y = (video_clip.size[1] // y_position_divisor)  # Center of the video height
+
+        generator = lambda txt: TextClip(txt, font=font_path, fontsize=fontsize, color="white", method='caption', size=segment_clip.size, stroke_color='black')
+
+        subtitle_clip = SubtitlesClip(subtitle_file_path, generator).set_position(('center', custom_y))
 
         final_clip = CompositeVideoClip([segment_clip, subtitle_clip])
 
