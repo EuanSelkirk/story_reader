@@ -15,3 +15,5 @@ cropped_clip = crop(clip, x1=x1, y1=y1, x2=x2, y2=y2)
 # or you can specify center point and cropped width/height
 # cropped_clip = crop(clip, width=crop_width, height=h, x_center=w/2, y_center=h/2)
 cropped_clip.write_videofile(f'/Users/euan/Desktop/story_reader/files/stock_video_916/{videoname}.mp4')
+
+#publish beta branch
