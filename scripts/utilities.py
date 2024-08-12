@@ -5,7 +5,7 @@ from pytube import YouTube
 with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
     config = json.load(f)
 
-#yt-dlp -f 'bestvideo' -o '/Users/euan/Desktop/story_reader/files/stock_video_footage/%(title)s.%(ext)s' URL 'https://www.youtube.com/watch?v=lekKHbYQGxM'
+#yt-dlp -f 'bestvideo' -o '/Users/euan/Desktop/story_reader/files/stock_video_footage/%(title)s.%(ext)s' 'https://www.youtube.com/watch?v=z121mUPexGc'
 
 
 

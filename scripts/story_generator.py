@@ -1,87 +1,172 @@
-# between 100 - 180 word stories
-# write a short adlib generator and then use chatgpt ot flesh out the stories
-from openai import OpenAI
-import tiktoken
+import re as regex
+from datetime import datetime
 import json
+from collections import defaultdict
+
+# To use:
+#     - Either follow the prompts in the console or
+#       make a txt file with the following format
+#       - Skeleton str
+#         [category]
+#         words in category
+#         repeat until all categories covered
+#     - run with the <"filename" in the console
+
+with open('/Users/euan/Desktop/story_reader/config/config.json', 'r') as f:
+    config = json.load(f)
+
+generated_stories_filepath = config[ "generated_story_path"]
+name_seed = datetime.now().strftime("%Y%m%d%H%M%S")
+output_path = f'{generated_stories_filepath}/{name_seed}.out'
+
+class Word:
+    def __init__(self, str, category):
+        self.str = str
+        self.category = category
+        self.used = False
+
+    def __str__(self):
+        return f"{self.str}"
+
+    def __repr__(self):
+        return self.__str__()
+
+# Open file for writing the results
+file_out = open(output_path, "w")
+
+# Read the skeleton string
+skeleton_str = input("Enter the skeleton string: ")
+
+# Regular expression to find words inside square brackets
+pattern = r"\[([^\]]+)\]"
+
+# Find all matches
+matches = regex.findall(pattern, skeleton_str)
+
+# Get the array of placeholders
+placeholders = [match for match in matches]
+
+print("Placeholders found:", placeholders)
+
+# Dictionary to store the count of each category
+category_count = defaultdict()
+
+# Update the count for each category found
+for match in matches:
+    category_count[match] += 1
+
+# Print the sorted list of categories and ask user for input
+user_input = {}
+while len(user_input) < len(category_count):
+    try:
+        user_category = input("Please enter the category name [in brackets]: ").strip("[]")
+        if user_category in category_count and user_category not in user_input:
+            count = category_count[user_category]
+            user_words = input(f"Please enter at least {count} words for the category '{user_category}' (separated by spaces): ").split()
+            if len(user_words) >= count:
+                user_input[user_category] = [Word(word, user_category) for word in user_words]
+            else:
+                print(f"Please enter at least {count} words.")
+        else:
+            print("Invalid category or category already entered.")
+    except ValueError:
+        print("Invalid input. Please try again.")
+
+max_spaces = len(placeholders)
+str_matches_permutations = []
+
+def generate_permutations(space, curr_build):
+    if space >= max_spaces:
+        # Join the current build into a string and store it
+        final_str = skeleton_str
+        for i, word in enumerate(curr_build):
+            final_str = final_str.replace(f"[{placeholders[i]}]", word.str, 1)
+        str_matches_permutations.append(final_str)
+        return
+
+    curr_category = placeholders[space]
+    curr_words = user_input[curr_category]
+
+    for word in curr_words:
+        if not word.used:
+            word.used = True
+            curr_build[space] = word
+            generate_permutations(space + 1, curr_build)
+            word.used = False
+
+generate_permutations(0, [None] * max_spaces)
+
+# Print the results
+for permutation in str_matches_permutations:
+    file_out.write(f"{permutation}\n")
+
+# Update the key with the new file path
+config["recent_stories_generated"] = output_path
+
+# Write the updated settings back to the JSON file
+with open('/Users/euan/Desktop/story_reader/config/config.json', "w") as file:
+    json.dump(config, file, indent=4)
+
+file_out.close()
+
+from openai import OpenAI
+import json
+from datetime import datetime
+import time
+
+client = OpenAI()
 
 with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
     config = json.load(f)
 
+generated_story_path = config["recent_stories_generated"]
 gpt_model = config["gpt_model"]
+assistant_instructions = config["assistant_instructions"]
+jsonl_story_path = config["jsonl_story_path"]
+name_seed = datetime.now().strftime("%Y%m%d%H%M%S")
+output_path = f"{jsonl_story_path}/{name_seed}.jsonl"
 
+def generated_stories_to_jsonl():
+    output_file = open(output_path, "w")
+    count = 1
+    with open(generated_story_path, 'r') as stories:
+        for story in stories:
+            output_file.write("{\"custom_id\": \"request-" + str(count) + "\", \"method\": \"POST\", \"url\": \"/v1/chat/completions\", \"body\": {\"model\": \"" + gpt_model + "\", \"messages\": [{\"role\": \"system\", \"content\": \"" + assistant_instructions + "\"},{\"role\": \"user\", \"content\": \"" + story.strip() + "\"}]}}")
+            output_file.write("\n")
+            count += 1
+    output_file.close()
 
-class fill:
-    '''
-    fills in slots in an adlib
-    spot linkes to a tag in a string
-    '''
-    def __init__(self, spot, data):
-        self.TYPE = spot
-        self.data = data
+# Path to your JSONL file
+jsonl_file_path = "/Users/euan/Desktop/story_reader/files/gpt_response_jsonl/batch_e9DN9UAOXD9G4jgO697tRUKY_output.jsonl"
 
+def extract_message_contents(jsonl_file_path):
+    message_contents = []
 
-def num_tokens_from_string(string: str) -> int:
-    """Returns the number of tokens in a text string."""
-    encoding = tiktoken.encoding_for_model(gpt_model)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
+    with open(jsonl_file_path, 'r') as file:
+        for line in file:
+            # Parse each line as a JSON object
+            entry = json.loads(line.strip())
+            
+            # Check if the response, body, and choices fields exist
+            if 'response' in entry and 'body' in entry['response']:
+                body = entry['response']['body']
+                
+                # Check if choices field exists and has the message content
+                if 'choices' in body and len(body['choices']) > 0:
+                    message = body['choices'][0].get('message', {})
+                    content = message.get('content')
+                    
+                    if content:
+                        message_contents.append(content)
 
-def get_GPT_response():
-    client = OpenAI()
+    return message_contents
 
-    completion = client.chat.completions.create(
-    model=gpt_model,
-    messages=[
-        {"role": "system", "content": "You are an average user of Reddit, responding to prompts in your favorite subreddits in slightly unbelievable fashion 100 to 160 words."},
-        {"role": "user", "content": "What was the worst experience you have had with healthcare in the United States of America"}
-    ]
-    )
+# Call the function and store the extracted message contents
+message_contents = extract_message_contents(jsonl_file_path)
 
-    if completion.choices[0].message.content is not None:
-        print("Request Cost: " + str((num_tokens_from_string("What was the worst experience you have had with healthcare in the United States of America") + num_tokens_from_string(string=completion.choices[0].message.content))) + " Tokens")
-        print(completion.choices[0].message.content)
-
-
-test_text = "@@0! I can't believe it! When I was @@1 my @@2, Someone was watching! I feel so @@3. @@0!"
-
-def count_occurrences(input_str):
-    # Find the largest number after a tag
-    n = max([int(tag[2]) for tag in input_str.split() if tag.startswith("@@")], default=0)
-    
-    # Create a list of size n+1 and initialize all counts to 0
-    occurrences = [0] * (n + 1)
-    
-    # Count occurrences of each number
-    for tag in input_str.split():
-        if tag.startswith("@@"):
-            num = int(tag[2])
-            occurrences[num] += 1
-    
-    return occurrences
-
-def fill_slot(text: str, slot: int, words: list):
-    # not gonna work!!! think of a recursive solution!!!
-    return
+# Print the extracted message contents
+for body in message_contents:
+    print(body)
 
 
 
-
-def madlib(input_str: str, fill_spots: list):
-    '''
-        input_str: a string with empty spots (see below)
-        fill_spots: an object array of fill objects used to fill the spots in input_str
-
-        an "empty spot" is defined as @@<number> example: (@@1, @@2), 
-            which type of word the numbers are is defined by the user
-    '''
-
-    # get the number of slots in each category
-    occurrences = count_occurrences(input_str)
-    print(occurrences)
-
-    # for each category that has over one of each input space
-        # permute to make each combination of the input
-            # for each permutation, save each one in a new entry in a csv file
-
-
-madlib(test_text,[])

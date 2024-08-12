@@ -1,7 +1,7 @@
 import moviepy.editor as mpy
 from moviepy.video.fx.all import crop
 
-videoname = 'MegaRampUltraRealisticGraphicsGameplay4K'
+videoname = 'gta5ramp'
 
 clip = mpy.VideoFileClip(f"/Users/euan/Desktop/story_reader/files/stock_video_footage/{videoname}.mp4")
 (w, h) = clip.size

@@ -5,3 +5,7 @@
 *.png
 *.srt
 /.vscode
+*.out
+*.in
+*.secret
+

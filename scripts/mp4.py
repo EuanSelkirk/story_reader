@@ -20,7 +20,7 @@ font_path = config['subtitle_font']
 def generate_AI_powered_video(text: str = ''):
     try:
         # generate mp3 and srt files and get the path to them
-        audio_file_path = audioAI.get_mp3_from_text(text=text)
+        audio_file_path = audioAI.get_mp3_openAI_from_text(text=text)
 
         # get the audio clip
         audio_clip = AudioFileClip(audio_file_path)
@@ -90,14 +90,13 @@ def generate_AI_powered_video(text: str = ''):
         temp_video_path = os.path.join(temp_file_folder, f'{int(short_duration)}_{current_date}.mp4')
 
         # save final video clip
-        final_clip.write_videofile(final_clip_path, codec='libx264', audio_codec='aac', temp_audiofile=temp_video_path)
+        final_clip.write_videofile(final_clip_path, codec='libx264', audio_codec='aac', threads = 4, temp_audiofile=temp_video_path)
 
         # remove temp files
         os.remove(audio_file_path)
         os.remove(subtitle_file_path)
 
         return True
-
 
     except Exception as e:
         print(f"An error occurred: {e}")
