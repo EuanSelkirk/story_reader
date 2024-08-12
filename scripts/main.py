@@ -30,10 +30,10 @@ with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
 #     - Saves said mp4 somewhere
 
 def main():
-    # [story_permutations_filepath, name_seed] = SSG.make_stories_from_input_file()
+    [story_permutations_filepath, name_seed] = SSG.make_stories_from_input_file()
 
-    # gpt_response_filepath = SSG.full_story_from_out_OpenAI(story_permutations_filepath, name_seed)
-    gpt_response_filepath = '/Users/euan/Desktop/story_reader/files/gpt_response_stories/20240812164416.txt'
+    gpt_response_filepath = SSG.full_story_from_out_OpenAI(story_permutations_filepath, name_seed)
+    # gpt_response_filepath = '/Users/euan/Desktop/story_reader/files/gpt_response_stories/20240812164416.txt'
 
     with open(gpt_response_filepath,'r') as stories:
         for story in stories:
