@@ -3,3 +3,9 @@
 *.mp3
 *.pyc
 *.png
+*.srt
+/.vscode
+*.out
+*.in
+*.secret
+

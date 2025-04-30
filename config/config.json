@@ -3,8 +3,16 @@
     "output_video_folder": "/Users/euan/Desktop/story_reader/files/finished_shorts",
     "stock_video_footage_folder": "/Users/euan/Desktop/story_reader/files/stock_video_916",
     "stock_video_footage_folder_uncropped": "/Users/euan/Desktop/story_reader/files/stock_video_footage",
-    "words_per_line": "5",
-    "speed": "1.2",
+    "subtitle_font": "/Users/euan/Desktop/story_reader/files/fonts/Montserrat-Bold.ttf",
+    "generated_story_path": "/Users/euan/Desktop/story_reader/files/generated_stories",
+    "gpt_response_stories": "/Users/euan/Desktop/story_reader/files/gpt_response_stories",
+    "gpt_model": "gpt-4o-mini",
+    "audio_method": "gtts",
+    "y_position_divisor": 6,
+    "words_per_line": 5,
+    "speed": 1,
+    "max_tokens": 500,
     "model_size": "medium",
-    "clip_length_cutoff": "400"
+    "clip_length_cutoff": 400,
+    "assistant_instructions": "You are to take stories given to you and rewrite them in a reddit style, skipping any intro and audience questions, only telling the juicy, embellished story! Make sure to keep the stories above 130 tokens but below 190 tokens as to not bore the readers!"
 }
