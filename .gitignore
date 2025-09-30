@@ -3,3 +3,17 @@
 *.mp3
 *.pyc
 *.png
+
+# Python cache & environments
+__pycache__/
+.venv/
+
+# Generated media assets
+files/tmp/*
+!files/tmp/.gitkeep
+files/finished_shorts/*
+!files/finished_shorts/.gitkeep
+files/stock_video_916/*
+!files/stock_video_916/.gitkeep
+files/stock_video_footage/*
+!files/stock_video_footage/.gitkeep

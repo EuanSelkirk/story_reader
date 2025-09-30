@@ -1,30 +1,44 @@
-import os
-import json
+"""Utility helpers for managing project assets."""
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional
+
 from pytube import YouTube
 
-with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
-    config = json.load(f)
+from configuration import AppConfig, get_config
 
-#yt-dlp -f 'bestvideo' -o '/Users/euan/Desktop/story_reader/files/stock_video_footage/%(title)s.%(ext)s' URL 'https://www.youtube.com/watch?v=lekKHbYQGxM'
-
+CONFIG = get_config()
 
 
-def update_parent_folder_path():
-    # Get the current directory of the current Python script
-    current_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    print(current_directory)
+def download_video(
+    url: str,
+    output_directory: Optional[Path] = None,
+    filename: Optional[str] = None,
+    config: AppConfig | None = None,
+) -> Path:
+    """Download a video from YouTube to the configured stock footage directory."""
 
-    json_directory = current_directory + "/config/config.json"
+    cfg = config or CONFIG
+    target_directory = output_directory or cfg.stock_video_footage_folder
+    target_directory.mkdir(parents=True, exist_ok=True)
 
-    # Read the JSON file
-    with open(json_directory, 'r') as file:
-        config = json.load(file)
+    stream = (
+        YouTube(url)
+        .streams.filter(file_extension="mp4", progressive=True)
+        .order_by("resolution")
+        .desc()
+        .first()
+    )
 
-    # Update the parent_folder variable
-    config['parent_file_folder'] = current_directory
+    if stream is None:
+        raise ValueError("No suitable MP4 stream found for the supplied URL.")
 
-    # Write the updated JSON back to the file
-    with open(json_directory, 'w') as file:
-        json.dump(config, file, indent=4)
+    download_path = Path(
+        stream.download(output_path=str(target_directory), filename=filename)
+    ).resolve()
 
-#print(downloadVideo('https://www.youtube.com/watch?v=u7kdVe8q5zs&t=210s', stock_video_footage_folder_uncropped))
+    return download_path
+
+
+__all__ = ["download_video"]

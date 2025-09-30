@@ -1,111 +1,71 @@
-import os
-import json
+from __future__ import annotations
+
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
 from faster_whisper import WhisperModel
 from gtts import gTTS
-from pydub import AudioSegment
+
+from configuration import AppConfig, get_config
+from audio import speed_up_audio
+
+CONFIG = get_config()
+_MODEL: Optional[WhisperModel] = None
+
+def _get_model(config: AppConfig) -> WhisperModel:
+    global _MODEL
+    if _MODEL is None:
+        _MODEL = WhisperModel(config.model_size)
+    return _MODEL
 
 
-with open('/Users/euan/Desktop/story_reader/config/config.json') as f:
-    config = json.load(f)
-
-model_size = config["model_size"]
-temp_file_folder = config["temp_file_folder"]
-words_per_line = int(config["words_per_line"])
-clip_length_cutoff = int(config["clip_length_cutoff"])
-speed = float(config["speed"])
-
-model = WhisperModel(model_size)
-name_seed = datetime.now().strftime("%Y%m%d%H%M%S")
-
-def convert_to_srt_time(seconds: float):
-    """
-    Convert seconds to SubRip (.srt) time format (hh:mm:ss,sss).
-
-    Args:
-    - seconds (float): The number of seconds to convert.
-
-    Returns:
-    - str: The time in SRT format.
-    """
-
-    milliseconds = int(seconds * 1000)
-    seconds = int(seconds)
-
-    return f"{0:02d}:{0:02d}:{seconds:02d},{(milliseconds - (seconds*1000)):03d}"
+def convert_to_srt_time(seconds: float) -> str:
+    milliseconds = int(round(seconds * 1000))
+    remaining_milliseconds = milliseconds % 1000
+    seconds_total = milliseconds // 1000
+    minutes, seconds_only = divmod(seconds_total, 60)
+    hours, minutes_only = divmod(minutes, 60)
+    return f"{hours:02d}:{minutes_only:02d}:{seconds_only:02d},{remaining_milliseconds:03d}"
 
 
-def speed_up_audio(input_file: str, output_file: str, speed_factor: float):
-    """
-    Speeds up the audio in an mp3 file
+def get_mp3_from_text(text: str, config: AppConfig | None = None) -> Path:
+    cfg = config or CONFIG
+    if not text.strip():
+        raise ValueError("Text must not be empty.")
 
-    Args:
-        input_file (str): Input file path
-        output_file (str): Output file path
-        speed_factor (float): Factor to speed up the mp3 file with
-    """
+    name_seed = datetime.now().strftime("%Y%m%d%H%M%S")
+    audio_path = cfg.temp_file_folder / f"{name_seed}.mp3"
+    tts = gTTS(text, lang="en", slow=False)
+    tts.save(str(audio_path))
 
-    # Check if input file exists
-    if not os.path.isfile(input_file):
-        raise FileNotFoundError(f"Input file '{input_file}' does not exist.")
-
-    try:
-        # Load audio from input file
-        audio = AudioSegment.from_mp3(input_file)
-
-        # Check if the speed factor is valid
-        if speed_factor <= 0:
-            raise ValueError("Speed factor must be a positive value.")
-
-        # Speed up the audio
-        modified_audio = audio.speedup(playback_speed=speed_factor)
-
-        # Export the modified audio to the output file
-        modified_audio.export(output_file, format='mp3')
-
-    except Exception as e:
-        raise RuntimeError(
-            f"An error occurred while processing the audio: {str(e)}")
-
-def get_mp3_from_text(text: str = '') -> str:
-    # get the path to the chunk
-    audio_path = f'{temp_file_folder}{name_seed}.mp3'
-
-    print("Generating audio...", temp_file_folder)
-
-    # generate the audio for the chunk
-    audio = gTTS(text, lang='en', slow=False)
-
-    # save the chunk at the tmp path
-    audio.save(audio_path)
-
-    print("Audio generated! Speeding up Audio...")
-
-    if(speed != 1):
-        speed_up_audio(audio_path, audio_path, speed)
-
-    print("Audio sped up!")
+    if cfg.speed != 1:
+        speed_up_audio(audio_path, audio_path, cfg.speed)
 
     return audio_path
 
-def generate_srt_from_mp3(audio_file_path: str = ''):
-    print("Generating srt...")
-    segments, info = model.transcribe(audio_file_path, word_timestamps=True)
-    segments = list(segments)
-    srt = ''
+
+def generate_srt_from_mp3(
+    audio_file_path: Path, config: AppConfig | None = None
+) -> Path:
+    cfg = config or CONFIG
+    model = _get_model(cfg)
+
+    segments, _ = model.transcribe(str(audio_file_path), word_timestamps=True)
+    srt_lines = []
+    counter = 1
 
     for segment in segments:
-        for i, word in enumerate(segment.words):
-            srt += f'{i+1}\n'
-            srt += f'{convert_to_srt_time(word.start)} --> {convert_to_srt_time(word.end)}\n'
-            srt += f'{word.word.strip()}\n\n'
+        for word in segment.words:
+            srt_lines.append(str(counter))
+            srt_lines.append(
+                f"{convert_to_srt_time(word.start)} --> {convert_to_srt_time(word.end)}"
+            )
+            srt_lines.append(word.word.strip())
+            srt_lines.append("")
+            counter += 1
 
-    srt_path = f'{temp_file_folder}{name_seed}.srt'
-
-    # save the srt file at the path
-    with open(srt_path, "w") as f:
-        f.write(srt)
-
-    print("Srt generated!")
-
+    name_seed = datetime.now().strftime("%Y%m%d%H%M%S")
+    srt_path = cfg.temp_file_folder / f"{name_seed}.srt"
+    srt_path.write_text("\n".join(srt_lines), encoding="utf-8")
     return srt_path
