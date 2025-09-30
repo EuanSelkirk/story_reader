@@ -1,0 +1,7 @@
+faster-whisper>=0.10
+moviepy>=1.0.3
+gTTS>=2.5
+pydub>=0.25
+mutagen>=1.47
+pytube>=15.0
+numpy>=1.24
